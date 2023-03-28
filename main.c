@@ -1,4 +1,4 @@
-#include "MCST.c"
+#include "MCTS.c"
 
 void next_move(node *root, int move){
     for(int i = 0; i < BOARD_WIDTH; i++){
@@ -29,7 +29,7 @@ int main() {
     int wins[3] = {0, 0, 0};
     srand(time(0));
 
-    printf("----------------------------------------------------------------");
+    printf("----------------------------------------------------------------\n");
 
     for (int game = 0; game < 100; game++) {
         node *root = init_root();
