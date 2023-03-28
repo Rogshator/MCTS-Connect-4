@@ -3,6 +3,7 @@
 #define DRAW 0
 #define WIN 1
 #define LOSS -1
+#define EXPL_WEIGHT 2
 
 int allowed_move(board state, int move){
     for(int j = 0; j < BOARD_HEIGHT; j++){
@@ -11,20 +12,20 @@ int allowed_move(board state, int move){
     return 0;
 } 
 
-float UCB1(float total_value, int expl_current, int expl_parent, int expl_weight){
+float UCB1(float total_value, int expl_current, int expl_parent){
     float UCB1;
     if(expl_current == 0) UCB1 = USB1_max;
-    else UCB1 = (float)(total_value/expl_current + expl_weight*sqrt(log(expl_parent)/expl_current));
+    else UCB1 = (float)(total_value/expl_current + EXPL_WEIGHT*sqrt(log(expl_parent)/expl_current));
     return UCB1;
 }
 
-float max_UCB1(node *branch, int expl_weight){
+float max_UCB1(node *branch){
 //return move id with max USB1 value
     float max_UCB1 = -1;
     int max_i = 0;
     for(int i = 0; i < BOARD_WIDTH; i++){
         if(branch->allowed_moves[i]){
-            branch->next_UCB1[i] = UCB1(branch->next[i]->total_value, branch->next[i]->expl_value, branch->expl_value, expl_weight);
+            branch->next_UCB1[i] = UCB1(branch->next[i]->total_value, branch->next[i]->expl_value, branch->expl_value);
             if(i == 0 || branch->next_UCB1[i] >= max_UCB1){
                 max_UCB1 = branch->next_UCB1[i];
                 max_i = i;
@@ -96,7 +97,7 @@ void back_propagation(node *leaf, int value){
     }
 }
 
-int MCTS(node *root, int time_limit, int expl_weight, int player){
+int MCTS(node *root, int time_limit, int player){
     //return preferred move
 
     node *branch;
@@ -112,7 +113,7 @@ int MCTS(node *root, int time_limit, int expl_weight, int player){
                 continue;
             }
             else{
-                int max_i = max_UCB1(branch, expl_weight);
+                int max_i = max_UCB1(branch);
                 branch = branch->next[max_i];
             }
         }

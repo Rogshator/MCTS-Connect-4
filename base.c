@@ -32,11 +32,11 @@ void print_board(board state){
     }
 }
 
-int update_board(board state, int playerNumber, int choice){
+int update_board(board state, int playerNumber, int move){
     
     for(int j = 0; j < BOARD_HEIGHT; j++){
-        if(state[choice][j] == 0){
-            state[choice][j] = playerNumber;
+        if(state[move][j] == 0){
+            state[move][j] = playerNumber;
             return 1;
         }
     }
