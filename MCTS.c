@@ -144,10 +144,8 @@ int MCTS(node *root, int time_limit, int player){
             }
             branch->is_leaf = 0;
         }
-        //fprintf(out, "step %i turn %i total %.0f expl %i\n", step, branch->state.turn, branch->total_value, branch->expl_value);
-    } while(time(0) - time_start <= time_limit);
+    } while(time(0) - time_start < time_limit);
 
-    printf("%i iterations\n", its);
     int preferred_move = max_mean_value(root);
     return preferred_move;
     
