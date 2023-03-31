@@ -59,13 +59,16 @@ int main() {
         {
             node *root = init_root();
             int current_player;
+            int game_path[MAX_GAME_LENGHT];
+            for(int i = 0; i < BOARD_WIDTH; i++) game_path[i] = 0;
 
             for (int i = 0; i < MAX_GAME_LENGHT; i++)
             {
                 current_player = i % 2 + 1;
                 int move = MCTS(root, time_limit, current_player);
-                printf("player : %i, value : %.2f, move : %i, turn : %i\n", current_player, (float)100*root->total_value/root->expl_value, move, root->state.turn);
-
+                print_board(root->state.board);
+                printf("player : %i, value : %.2f, move : %i, turn : %i, %.0f over %i expls\n", current_player, (float)100*(root->next[move]->total_value/root->next[move]->expl_value), move, root->state.turn, root->next[move]->total_value, root->next[move]->expl_value);
+                game_path[i] = move;
                 next_move(root, move);
                 root = root->next[move];
 
@@ -78,6 +81,9 @@ int main() {
                     print_board(root->state.board);
 
                     printf("Total games: %i\nPlayer 1: %i wins\nPlayer 2: %i wins\nDraws: %i\n", game + 1, wins[1], wins[2], wins[0]);
+                    printf("game path : \n");
+                    for(int i = 0; i < MAX_GAME_LENGHT; i++) printf("%i ", game_path[i]);
+                    printf("\n");                                        
                     break;
                 }
             }

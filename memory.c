@@ -4,7 +4,7 @@ typedef struct node_t
 {
     state state;
     float total_value;
-    int expl_value;
+    long expl_value;
     int is_leaf; //is_leaf if all moves are NULL
     int allowed_moves[BOARD_WIDTH];
     float next_UCB1[BOARD_WIDTH];
@@ -16,7 +16,9 @@ node *init_node(node *parent, int move){
     node *init = malloc(sizeof(node));
     copy_board(init->state.board, parent->state.board);
     init->state.turn = parent->state.turn + 1;
-    update_board(init->state.board, (init->state.turn + 1) % 2 + 1, move); // improve
+    init->state.player = parent->state.opponent;
+    init->state.opponent = parent->state.player;
+    update_board(init->state.board, init->state.player, move); // improve
     init->total_value = 0;
     init->expl_value = 0;
     init->is_leaf = 1;
@@ -34,6 +36,8 @@ node *init_root(){
 
     reset_board(init->state.board);
     init->state.turn = 0;
+    init->state.player = 2;
+    init->state.opponent = 1;
     init->total_value = 0;
     init->expl_value = 0;
     init->is_leaf = 1;

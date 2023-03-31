@@ -12,20 +12,20 @@ int allowed_move(board state, int move){
     return 0;
 } 
 
-float UCB1(float total_value, int expl_current, int expl_parent){
+float UCB1(float total_value, int expl_current, int expl_parent, int mean_sign){
     float UCB1;
     if(expl_current == 0) UCB1 = USB1_max;
-    else UCB1 = (float)(total_value/expl_current + EXPL_WEIGHT*sqrt(log(expl_parent)/expl_current));
+    else UCB1 = (float)(mean_sign*total_value/expl_current + EXPL_WEIGHT*sqrt(log(expl_parent)/expl_current));
     return UCB1;
 }
 
-float max_UCB1(node *branch){
+float max_UCB1(node *branch, int mean_sign){
 //return move id with max USB1 value
     float max_UCB1 = -1;
     int max_i = 0;
     for(int i = 0; i < BOARD_WIDTH; i++){
         if(branch->allowed_moves[i]){
-            branch->next_UCB1[i] = UCB1(branch->next[i]->total_value, branch->next[i]->expl_value, branch->expl_value);
+            branch->next_UCB1[i] = UCB1(branch->next[i]->total_value, branch->next[i]->expl_value, branch->expl_value, mean_sign);
             if(i == 0 || branch->next_UCB1[i] >= max_UCB1){
                 max_UCB1 = branch->next_UCB1[i];
                 max_i = i;
@@ -54,11 +54,17 @@ float max_mean_value(node *root){
     return max_i;
 }
 
-float simulate_random_game(state state){
+int simulate_random_game(state state){
     int current_player;
     int choice;
     int updated;
-    for(int i = state.turn; i < MAX_GAME_LENGHT; i++){
+/*     int inverse_player[2] = {2,1};
+    int last_player = inverse_player[state.player - 1];
+    current_player = inverse_player[last_player - 1];
+    faster than
+    current_player = i%2+1 ? no */
+
+    for(int i = state.turn; i < MAX_GAME_LENGHT; i++){  
         current_player = i % 2 + 1;
         do{
         choice = random_choice();
@@ -66,7 +72,6 @@ float simulate_random_game(state state){
         } while(!updated);
         updated = 0;
         if(game_over(state.board)){
-            state.turn = i;
             return current_player;
         }
     }
@@ -90,6 +95,8 @@ float rollout(node *leaf, int player){
 }
 
 void back_propagation(node *leaf, int value){
+    leaf->expl_value += 1;
+    leaf->total_value = value;
     while(leaf->parent != NULL){
         leaf = leaf->parent;
         leaf->expl_value += 1;
@@ -108,14 +115,9 @@ int MCTS(node *root, int time_limit, int player){
         its += 1;
         branch = root;
         while(!branch->is_leaf){
-            if(branch->state.turn == MAX_GAME_LENGHT){
-                branch->is_leaf = 1;
-                continue;
-            }
-            else{
-                int max_i = max_UCB1(branch);
+                int mean_sign = (branch->state.opponent == player)*2-1;
+                int max_i = max_UCB1(branch, mean_sign);
                 branch = branch->next[max_i];
-            }
         }
         if(!branch->expl_value){
             //back propagation
@@ -123,13 +125,23 @@ int MCTS(node *root, int time_limit, int player){
             back_propagation(branch, value);
         }
         else{
+            if(game_over(branch->state.board)){
+                int last_player = branch->state.player;
+                int value = end_value(player, last_player);
+                // if(value && player == 2){
+                //     printf("yay");
+                //     print_board(branch->state.board);
+                // }
+                back_propagation(branch, value);
+
+                continue;
+            }
             //create next nodes + back propagation
             if(branch->state.turn == MAX_GAME_LENGHT){
-                branch->expl_value += 1;
-                branch->total_value += DRAW;
                 back_propagation(branch, DRAW);
                 continue;
             }
+
             int first_allowed_move = 1;
             for(int i = 0; i < BOARD_WIDTH; i++){
                 branch->allowed_moves[i] = allowed_move(branch->state.board, i);
@@ -145,7 +157,10 @@ int MCTS(node *root, int time_limit, int player){
             branch->is_leaf = 0;
         }
     } while(time(0) - time_start < time_limit);
-
+    // printf("%i interations\n", its);
+    // for(int i = 0; i < BOARD_WIDTH; i++){
+    //     if(root->allowed_moves[i]) printf("move : %i, value : %.f, expl_value : %i, mean : %.2f\n", i, root->next[i]->total_value, root->next[i]->expl_value, (float)100*root->next[i]->total_value/root->next[i]->expl_value);
+    // }
     int preferred_move = max_mean_value(root);
     return preferred_move;
     
