@@ -16,9 +16,9 @@ node *init_node(node *parent, int move){
     node *init = malloc(sizeof(node));
     copy_board(init->state.board, parent->state.board);
     init->state.turn = parent->state.turn + 1;
-    init->state.player = parent->state.opponent;
-    init->state.opponent = parent->state.player;
-    update_board(init->state.board, init->state.player, move); // improve
+    init->state.last_player = parent->state.next_player;
+    init->state.next_player = parent->state.last_player;
+    update_board(init->state.board, init->state.last_player, move); // improve
     init->total_value = 0;
     init->expl_value = 0;
     init->is_leaf = 1;
@@ -36,8 +36,8 @@ node *init_root(){
 
     reset_board(init->state.board);
     init->state.turn = 0;
-    init->state.player = 2;
-    init->state.opponent = 1;
+    init->state.last_player = 2;
+    init->state.next_player = 1;
     init->total_value = 0;
     init->expl_value = 0;
     init->is_leaf = 1;

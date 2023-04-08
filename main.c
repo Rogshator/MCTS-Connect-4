@@ -58,6 +58,7 @@ int main() {
         for (int game = 0; game < max_games; game++)
         {
             node *root = init_root();
+            node *copy = root;
             int current_player;
             int game_path[MAX_GAME_LENGHT];
             for(int i = 0; i < BOARD_WIDTH; i++) game_path[i] = 0;
@@ -66,8 +67,7 @@ int main() {
             {
                 current_player = i % 2 + 1;
                 int move = MCTS(root, time_limit, current_player);
-                print_board(root->state.board);
-                printf("player : %i, value : %.2f, move : %i, turn : %i, %.0f over %i expls\n", current_player, (float)100*(root->next[move]->total_value/root->next[move]->expl_value), move, root->state.turn, root->next[move]->total_value, root->next[move]->expl_value);
+                // print_board(root->state.board);
                 game_path[i] = move;
                 next_move(root, move);
                 root = root->next[move];
@@ -83,7 +83,8 @@ int main() {
                     printf("Total games: %i\nPlayer 1: %i wins\nPlayer 2: %i wins\nDraws: %i\n", game + 1, wins[1], wins[2], wins[0]);
                     printf("game path : \n");
                     for(int i = 0; i < MAX_GAME_LENGHT; i++) printf("%i ", game_path[i]);
-                    printf("\n");                                        
+                    printf("\n");    
+                    free_tree(copy);                                    
                     break;
                 }
             }
@@ -94,7 +95,7 @@ int main() {
     if(game_choice == 'P'){
         //TODO:Make player choose side (random, first player, or 2nd player)
         int real_player;
-        int time_limit = 1;
+        int time_limit = 2;
 
         do{
             printf("Choose your side (0 for random side) :\n");

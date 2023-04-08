@@ -12,8 +12,8 @@ typedef int board[BOARD_WIDTH][BOARD_HEIGHT];
 typedef struct state_t{
     board board;
     int turn;
-    int player;
-    int opponent;
+    int last_player;
+    int next_player;
 } state;
 
 void reset_board(board state){

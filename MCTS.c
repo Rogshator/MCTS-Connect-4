@@ -1,14 +1,12 @@
 #include "memory.c"
 #define USB1_max (float)1000000
-#define DRAW 0
-#define WIN 1
-#define LOSS -1
-#define EXPL_WEIGHT 2
+#define DRAW (float)0
+#define WIN (float)1
+#define LOSS (float)-1
+#define EXPL_WEIGHT 7
 
 int allowed_move(board state, int move){
-    for(int j = 0; j < BOARD_HEIGHT; j++){
-        if(!state[move][j]) return 1;
-    }
+    if(!state[move][BOARD_HEIGHT-1]) return 1;
     return 0;
 } 
 
@@ -65,7 +63,7 @@ int simulate_random_game(state state){
     current_player = i%2+1 ? no */
 
     for(int i = state.turn; i < MAX_GAME_LENGHT; i++){  
-        current_player = i % 2 + 1;
+        current_player = i % 2 + 1; //TODO : change % to assignation of players by accessing state 
         do{
         choice = random_choice();
         updated = update_board(state.board, current_player, choice);
@@ -79,14 +77,13 @@ int simulate_random_game(state state){
 } 
 
 
-int end_value(int player, int winner){
+float end_value(int player, int winner){
     if(!winner) return DRAW;
     if(player == winner) return WIN;
     return LOSS;
 }
 
 float rollout(node *leaf, int player){
-
     int winner = simulate_random_game(leaf->state);
     int value = end_value(player, winner);
     leaf->expl_value += 1;
@@ -94,9 +91,9 @@ float rollout(node *leaf, int player){
     return value;
 }
 
-void back_propagation(node *leaf, int value){
+void back_propagation(node *leaf, float value){
     leaf->expl_value += 1;
-    leaf->total_value = value;
+    leaf->total_value += value;
     while(leaf->parent != NULL){
         leaf = leaf->parent;
         leaf->expl_value += 1;
@@ -106,34 +103,44 @@ void back_propagation(node *leaf, int value){
 
 int MCTS(node *root, int time_limit, int player){
     //return preferred move
+    //TODO: Fix not seeing win when ending move
 
+
+/*     //Check if next move is ending move
+    for(int i = 0; i < BOARD_WIDTH; i++){
+        if(allowed_move(root->state.board, i)){
+            board state;
+            copy_board(state, root->state.board);
+            update_board(state, player, i);
+            if(game_over(state)){
+                root->next[i] = init_node(root, i);
+                printf("ending move : %i", i);
+                return i;
+            }
+        }
+    } */
+
+    //Run MCTS
     node *branch;
-
     time_t time_start = time(0);
     int its = 0;
     do{
-        its += 1;
         branch = root;
+        its += 1;
         while(!branch->is_leaf){
-                int mean_sign = (branch->state.opponent == player)*2-1;
+                int mean_sign = (branch->state.next_player == player)*2-1;
                 int max_i = max_UCB1(branch, mean_sign);
                 branch = branch->next[max_i];
         }
         if(!branch->expl_value){
             //back propagation
-            int value = rollout(branch, player);
+            float value = rollout(branch, player);
             back_propagation(branch, value);
         }
         else{
             if(game_over(branch->state.board)){
-                int last_player = branch->state.player;
-                int value = end_value(player, last_player);
-                // if(value && player == 2){
-                //     printf("yay");
-                //     print_board(branch->state.board);
-                // }
+                float value = end_value(player, branch->state.last_player);
                 back_propagation(branch, value);
-
                 continue;
             }
             //create next nodes + back propagation
@@ -148,7 +155,7 @@ int MCTS(node *root, int time_limit, int player){
                 if(branch->allowed_moves[i]){
                     branch->next[i] = init_node(branch, i);
                     if(first_allowed_move){
-                        int value = rollout(branch->next[i], player);
+                        float value = rollout(branch->next[i], player);
                         back_propagation(branch->next[i], value);
                         first_allowed_move = 0;
                     }
@@ -157,11 +164,13 @@ int MCTS(node *root, int time_limit, int player){
             branch->is_leaf = 0;
         }
     } while(time(0) - time_start < time_limit);
-    // printf("%i interations\n", its);
-    // for(int i = 0; i < BOARD_WIDTH; i++){
-    //     if(root->allowed_moves[i]) printf("move : %i, value : %.f, expl_value : %i, mean : %.2f\n", i, root->next[i]->total_value, root->next[i]->expl_value, (float)100*root->next[i]->total_value/root->next[i]->expl_value);
-    // }
+    // } while(its < time_limit);
+    printf("%i iterations\n", its);
+/*    for(int i = 0; i < BOARD_WIDTH; i++){
+       if(root->allowed_moves[i]) printf("move : %i, value : %.f, expl_value : %i, mean : %.2f\n", i, root->next[i]->total_value, root->next[i]->expl_value, (float)100*root->next[i]->total_value/root->next[i]->expl_value);
+    } */
     int preferred_move = max_mean_value(root);
+    printf("player : %i, value : %.2f, move : %i, turn : %i, %.0f over %i expls\n", player, (float)100*(root->next[preferred_move]->total_value/root->next[preferred_move]->expl_value), preferred_move, root->state.turn, root->next[preferred_move]->total_value, root->next[preferred_move]->expl_value);
     return preferred_move;
     
 }

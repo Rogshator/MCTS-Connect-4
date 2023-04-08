@@ -13,7 +13,7 @@
             "stopAtEntry": false,
             "cwd": "C:/Users/Maxime/Desktop/Travail/c/MCST_Connect4",
             "environment": [],
-            "externalConsole": true,
+            "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [
                 {
