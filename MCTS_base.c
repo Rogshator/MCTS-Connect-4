@@ -1,22 +1,25 @@
+#pragma once
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <float.h>
 #include <math.h>
+
 #define BOARD_WIDTH 7
 #define BOARD_HEIGHT 6
 #define MAX_GAME_LENGHT 42
 
-typedef int board[BOARD_WIDTH][BOARD_HEIGHT];
+typedef int Board[BOARD_WIDTH][BOARD_HEIGHT];
 
-typedef struct state_t{
-    board board;
+typedef struct State_t{
+    Board board;
     int turn;
     int last_player;
     int next_player;
-} state;
+} State;
 
-void reset_board(board state){
+void reset_board(Board state){
     for(int i = 0; i < BOARD_WIDTH; i++){
         for(int j = 0; j < BOARD_HEIGHT; j++){
             state[i][j] = 0;
@@ -24,7 +27,7 @@ void reset_board(board state){
     }
 }
 
-void print_board(board state){
+void print_board(Board state){
     printf("\n");
     for(int j = BOARD_HEIGHT-1; j >= 0; j--){
         for(int i = 0; i < BOARD_WIDTH; i++){
@@ -34,7 +37,7 @@ void print_board(board state){
     }
 }
 
-int update_board(board state, int playerNumber, int move){
+int update_board(Board state, int playerNumber, int move){
     
     for(int j = 0; j < BOARD_HEIGHT; j++){
         if(state[move][j] == 0){
@@ -45,7 +48,7 @@ int update_board(board state, int playerNumber, int move){
     return 0;
 }
 
-void copy_board(board copy, board copied){
+void copy_board(Board copy, Board copied){
     for(int i = 0; i < BOARD_WIDTH; i++){
         for(int j = 0; j < BOARD_HEIGHT; j++){
             copy[i][j] = copied[i][j];
@@ -53,7 +56,7 @@ void copy_board(board copy, board copied){
     }
 }
 
-int pattern_row(board state){
+int pattern_row(Board state){
     int a,b,c,d;
     for(int i = 0; i < BOARD_WIDTH-3; i++){
         for(int j = 0; j < BOARD_HEIGHT; j++){
@@ -65,7 +68,7 @@ int pattern_row(board state){
     return 0;
 }
 
-int pattern_col(board state){
+int pattern_col(Board state){
     int a,b,c,d;
     for(int i = 0; i < BOARD_WIDTH; i++){
         for(int j = 0; j < BOARD_HEIGHT-3; j++){
@@ -77,7 +80,7 @@ int pattern_col(board state){
     return 0;
 }
 
-int pattern_diag(board state){
+int pattern_diag(Board state){
     int a,b,c,d;
     for(int i = 0; i < BOARD_WIDTH-3; i++){
         for(int j = 0; j < BOARD_HEIGHT-3; j++){
@@ -89,7 +92,7 @@ int pattern_diag(board state){
     return 0;
 }
 
-int pattern_rdiag(board state){
+int pattern_rdiag(Board state){
     int a,b,c,d;
     for(int i = 0; i < BOARD_WIDTH-3; i++){
         for(int j = 0; j < BOARD_HEIGHT-3; j++){
@@ -101,7 +104,7 @@ int pattern_rdiag(board state){
     return 0;
 }
 
-int game_over(board state){
+int game_over(Board state){
     if(pattern_row(state) || pattern_col(state) || pattern_diag(state) || pattern_rdiag(state))
         return 1;
     return 0;
